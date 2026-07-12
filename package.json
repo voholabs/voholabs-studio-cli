@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "prepare": "npm run build",
     "start": "node ./dist/index.js",
     "prepublishOnly": "npm run build",
     "publish": "tsup && npm publish --access public"
