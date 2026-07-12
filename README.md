@@ -17,9 +17,9 @@ The Voholabs CLI provides a command-line interface to the Postiz API, enabling d
 ### From npm (Recommended)
 
 ```bash
-npm install -g voholabs
+npm install -g github:voholabs/voholabs-studio-cli
 # or
-pnpm install -g voholabs
+pnpm install -g github:voholabs/voholabs-studio-cli
 ```
 
 ---

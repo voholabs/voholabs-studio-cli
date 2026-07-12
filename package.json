@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
+    "prepare": "npm run build",
     "start": "node ./dist/index.js",
     "prepublishOnly": "npm run build",
     "publish": "tsup && npm publish --access public"
@@ -40,11 +41,11 @@
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/voholabs/voholabs-cli.git"
+    "url": "https://github.com/voholabs/voholabs-studio-cli.git"
   },
-  "homepage": "https://github.com/voholabs/voholabs-cli#readme",
+  "homepage": "https://github.com/voholabs/voholabs-studio-cli#readme",
   "bugs": {
-    "url": "https://github.com/voholabs/voholabs-cli/issues"
+    "url": "https://github.com/voholabs/voholabs-studio-cli/issues"
   },
   "engines": {
     "node": ">=18.0.0"
