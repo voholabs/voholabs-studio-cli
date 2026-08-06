@@ -851,13 +851,26 @@ async function brainSet(args) {
       note: String(link.note || "")
     }));
   }
+  if (payload.assets) {
+    body.assets = payload.assets.map((asset) => __spreadProps(__spreadValues({
+      id: ruleId(),
+      name: String(asset.name || ""),
+      url: String(asset.url || "")
+    }, asset.mime ? { mime: String(asset.mime) } : {}), {
+      note: String(asset.note || "")
+    }));
+  }
   const blocks = body.blocks;
   const preview = blocks.map((b) => `  \u2022 ${b.heading || "(no heading)"}
     ${b.body.replace(/\n/g, "\n    ")}`).join("\n");
+  const attachments = [
+    body.links ? `${body.links.length} link(s)` : "",
+    body.assets ? `${body.assets.length} file(s)` : ""
+  ].filter(Boolean).join(" and ");
   await confirmHuman(
-    `About to REPLACE ${args.category}/${args.key} with ${blocks.length} rule(s).
+    `About to REPLACE ${args.category}/${args.key} with ${blocks.length} rule(s)${attachments ? `, ${attachments}` : ""}.
 Anything currently in this document and not listed below will be lost.
-
+${body.links ? "" : "Links are left as they are.\n"}${body.assets ? "" : "Files are left as they are.\n"}
 ${preview || "  (no rules \u2014 this empties the document)"}`
   );
   try {
@@ -1217,6 +1230,9 @@ async function brainDelete(args) {
     }).option("rules", { describe: "Inline JSON of rules", type: "string" }).example(
       "$0 brain:set foundation icp --file icp.json",
       "Replace the ICP document with the rules in icp.json"
+    ).example(
+      "$0 brain:set foundation branding-assets --file brand.json",
+      "Rules plus files, where each file url comes from `voholabs upload`"
     );
   },
   brainSet

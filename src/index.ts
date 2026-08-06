@@ -425,6 +425,10 @@ yargs(hideBin(process.argv))
         .example(
           '$0 brain:set foundation icp --file icp.json',
           'Replace the ICP document with the rules in icp.json'
+        )
+        .example(
+          '$0 brain:set foundation branding-assets --file brand.json',
+          'Rules plus files, where each file url comes from `voholabs upload`'
         );
     },
     brainSet as any

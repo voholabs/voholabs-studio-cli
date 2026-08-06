@@ -13,6 +13,13 @@ interface BrainLink {
   note?: string;
 }
 
+interface BrainAsset {
+  name: string;
+  url: string;
+  mime?: string;
+  note?: string;
+}
+
 const ruleId = () => Math.random().toString(36).slice(2, 12);
 
 // Changing the brain changes what gets published, so a person confirms it.
@@ -125,15 +132,37 @@ export async function brainSet(args: any) {
     }));
   }
 
+  // Brand files: upload with `voholabs upload` first, then pass the path it
+  // returns as the url here. Omitting assets leaves the stored ones alone.
+  if (payload.assets) {
+    body.assets = (payload.assets as BrainAsset[]).map((asset) => ({
+      id: ruleId(),
+      name: String(asset.name || ''),
+      url: String(asset.url || ''),
+      ...(asset.mime ? { mime: String(asset.mime) } : {}),
+      note: String(asset.note || ''),
+    }));
+  }
+
   const blocks = body.blocks as BrainRule[];
   const preview = blocks
     .map((b) => `  • ${b.heading || '(no heading)'}\n    ${b.body.replace(/\n/g, '\n    ')}`)
     .join('\n');
 
+  const attachments = [
+    body.links ? `${(body.links as unknown[]).length} link(s)` : '',
+    body.assets ? `${(body.assets as unknown[]).length} file(s)` : '',
+  ]
+    .filter(Boolean)
+    .join(' and ');
+
   await confirmHuman(
-    `About to REPLACE ${args.category}/${args.key} with ${blocks.length} rule(s).\n` +
-      `Anything currently in this document and not listed below will be lost.\n\n` +
-      `${preview || '  (no rules — this empties the document)'}`
+    `About to REPLACE ${args.category}/${args.key} with ${blocks.length} rule(s)` +
+      `${attachments ? `, ${attachments}` : ''}.\n` +
+      `Anything currently in this document and not listed below will be lost.\n` +
+      `${body.links ? '' : 'Links are left as they are.\n'}` +
+      `${body.assets ? '' : 'Files are left as they are.\n'}` +
+      `\n${preview || '  (no rules — this empties the document)'}`
   );
 
   try {
