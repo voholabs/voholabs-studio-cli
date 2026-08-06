@@ -200,6 +200,41 @@ var PostizAPI = class {
       body: JSON.stringify({ methodName, data })
     });
   }
+  async getBrainSchema() {
+    return this.request("/public/v1/brain/schema", {
+      method: "GET"
+    });
+  }
+  async getBrain() {
+    return this.request("/public/v1/brain", {
+      method: "GET"
+    });
+  }
+  async getBrainDocument(category, key) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: "GET"
+      }
+    );
+  }
+  async saveBrainDocument(category, key, body) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body)
+      }
+    );
+  }
+  async deleteBrainDocument(category, key) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: "DELETE"
+      }
+    );
+  }
 };
 
 // src/commands/auth.ts
@@ -723,6 +758,141 @@ async function uploadFile(args) {
   }
 }
 
+// src/commands/brain.ts
+var import_readline = require("readline");
+var import_fs4 = require("fs");
+var ruleId = () => Math.random().toString(36).slice(2, 12);
+async function confirmHuman(summary) {
+  console.log("");
+  console.log(summary);
+  console.log("");
+  if (!process.stdin.isTTY) {
+    console.error("\u274C This changes the agent brain and needs a human to approve it.");
+    console.error("   Run it in a terminal; it will not auto-approve.");
+    process.exit(1);
+  }
+  const rl = (0, import_readline.createInterface)({ input: process.stdin, output: process.stdout });
+  const answer = await new Promise((resolve) => {
+    rl.question("Type 'yes' to apply this change: ", (a) => {
+      rl.close();
+      resolve(String(a || "").trim().toLowerCase());
+    });
+  });
+  if (answer !== "yes") {
+    console.log("\u26A0\uFE0F  Cancelled, nothing was changed.");
+    process.exit(0);
+  }
+}
+async function brainSchema() {
+  const api = new PostizAPI(getConfig());
+  try {
+    const result = await api.getBrainSchema();
+    console.log("\u{1F9E0} Brain structure:");
+    console.log(JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error("\u274C Failed to read the brain schema:", error.message);
+    process.exit(1);
+  }
+}
+async function brainList(args) {
+  const api = new PostizAPI(getConfig());
+  try {
+    const result = await api.getBrain();
+    const documents = (args == null ? void 0 : args.category) ? result.documents.filter((d) => d.category === args.category) : result.documents;
+    console.log("\u{1F9E0} Agent brain:");
+    console.log(JSON.stringify(__spreadProps(__spreadValues({}, result), { documents }), null, 2));
+    return documents;
+  } catch (error) {
+    console.error("\u274C Failed to read the brain:", error.message);
+    process.exit(1);
+  }
+}
+async function brainGet(args) {
+  const api = new PostizAPI(getConfig());
+  try {
+    const result = await api.getBrainDocument(args.category, args.key);
+    console.log(JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error("\u274C Failed to read the document:", error.message);
+    process.exit(1);
+  }
+}
+async function brainSet(args) {
+  const api = new PostizAPI(getConfig());
+  let payload;
+  try {
+    const raw = args.file ? (0, import_fs4.readFileSync)(args.file, "utf8") : args.rules;
+    if (!raw) {
+      console.error("\u274C Pass --file <path> or --rules '<json>'");
+      process.exit(1);
+    }
+    payload = JSON.parse(raw);
+  } catch (error) {
+    console.error("\u274C Could not read the rules:", error.message);
+    process.exit(1);
+  }
+  const rules = Array.isArray(payload) ? payload : payload.rules || [];
+  const body = {
+    blocks: rules.map((rule) => ({
+      id: ruleId(),
+      heading: String(rule.heading || ""),
+      body: String(rule.body || "")
+    }))
+  };
+  if (payload.title !== void 0) {
+    body.title = String(payload.title);
+  }
+  if (payload.links) {
+    body.links = payload.links.map((link) => ({
+      id: ruleId(),
+      url: String(link.url || ""),
+      note: String(link.note || "")
+    }));
+  }
+  const blocks = body.blocks;
+  const preview = blocks.map((b) => `  \u2022 ${b.heading || "(no heading)"}
+    ${b.body.replace(/\n/g, "\n    ")}`).join("\n");
+  await confirmHuman(
+    `About to REPLACE ${args.category}/${args.key} with ${blocks.length} rule(s).
+Anything currently in this document and not listed below will be lost.
+
+${preview || "  (no rules \u2014 this empties the document)"}`
+  );
+  try {
+    const result = await api.saveBrainDocument(args.category, args.key, body);
+    console.log("\u2705 Saved");
+    console.log(JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error("\u274C Failed to save:", error.message);
+    process.exit(1);
+  }
+}
+async function brainDelete(args) {
+  var _a;
+  const api = new PostizAPI(getConfig());
+  let existing;
+  try {
+    existing = await api.getBrainDocument(args.category, args.key);
+  } catch (error) {
+    console.error("\u274C Could not find that document:", error.message);
+    process.exit(1);
+  }
+  const count = (((_a = existing == null ? void 0 : existing.content) == null ? void 0 : _a.blocks) || []).length;
+  await confirmHuman(
+    `About to DELETE ${args.category}/${args.key} and its ${count} rule(s). This cannot be undone.`
+  );
+  try {
+    await api.deleteBrainDocument(args.category, args.key);
+    console.log("\u2705 Deleted");
+  } catch (error) {
+    console.error("\u274C Failed to delete:", error.message);
+    process.exit(1);
+  }
+}
+
 // src/index.ts
 (0, import_yargs.default)((0, import_helpers.hideBin)(process.argv)).scriptName("voholabs").usage("$0 <command> [options]").command(
   "posts:create",
@@ -1006,6 +1176,60 @@ async function uploadFile(args) {
     }).example("$0 upload ./image.png", "Upload an image");
   },
   uploadFile
+).command(
+  "brain:schema",
+  "Show which brain categories and documents exist",
+  {},
+  brainSchema
+).command(
+  "brain:list",
+  "Read the agent brain",
+  (yargs2) => {
+    return yargs2.option("category", {
+      describe: "Only one category: foundation, sources, experience or channels",
+      type: "string"
+    }).example(
+      "$0 brain:list --category foundation",
+      "Read the Foundation documents"
+    );
+  },
+  brainList
+).command(
+  "brain:get <category> <key>",
+  "Read one brain document",
+  (yargs2) => {
+    return yargs2.positional("category", {
+      describe: "foundation, sources, experience or channels",
+      type: "string"
+    }).positional("key", { describe: "Document key", type: "string" }).example("$0 brain:get foundation icp", "Read the ICP document");
+  },
+  brainGet
+).command(
+  "brain:set <category> <key>",
+  "Replace a brain document (asks for approval)",
+  (yargs2) => {
+    return yargs2.positional("category", {
+      describe: "foundation, sources or channels",
+      type: "string"
+    }).positional("key", { describe: "Document key", type: "string" }).option("file", {
+      describe: "Path to a JSON file of rules",
+      type: "string"
+    }).option("rules", { describe: "Inline JSON of rules", type: "string" }).example(
+      "$0 brain:set foundation icp --file icp.json",
+      "Replace the ICP document with the rules in icp.json"
+    );
+  },
+  brainSet
+).command(
+  "brain:delete <category> <key>",
+  "Delete a brain document (asks for approval)",
+  (yargs2) => {
+    return yargs2.positional("category", {
+      describe: "Category of the document",
+      type: "string"
+    }).positional("key", { describe: "Document key", type: "string" }).example("$0 brain:delete sources abc123", "Delete a source document");
+  },
+  brainDelete
 ).command(
   "auth:login",
   "Authenticate using OAuth2 (device flow)",

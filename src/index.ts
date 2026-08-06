@@ -5,6 +5,13 @@ import { listIntegrations, listGroups, getIntegrationSettings, triggerIntegratio
 import { getAnalytics, getPostAnalytics } from './commands/analytics';
 import { uploadFile } from './commands/upload';
 import { authLogin, authLogout, authStatus } from './commands/auth';
+import {
+  brainSchema,
+  brainList,
+  brainGet,
+  brainSet,
+  brainDelete,
+} from './commands/brain';
 import type { Argv } from 'yargs';
 
 yargs(hideBin(process.argv))
@@ -363,6 +370,78 @@ yargs(hideBin(process.argv))
         .example('$0 upload ./image.png', 'Upload an image');
     },
     uploadFile as any
+  )
+  .command(
+    'brain:schema',
+    'Show which brain categories and documents exist',
+    {},
+    brainSchema as any
+  )
+  .command(
+    'brain:list',
+    'Read the agent brain',
+    (yargs: Argv) => {
+      return yargs
+        .option('category', {
+          describe: 'Only one category: foundation, sources, experience or channels',
+          type: 'string',
+        })
+        .example(
+          '$0 brain:list --category foundation',
+          'Read the Foundation documents'
+        );
+    },
+    brainList as any
+  )
+  .command(
+    'brain:get <category> <key>',
+    'Read one brain document',
+    (yargs: Argv) => {
+      return yargs
+        .positional('category', {
+          describe: 'foundation, sources, experience or channels',
+          type: 'string',
+        })
+        .positional('key', { describe: 'Document key', type: 'string' })
+        .example('$0 brain:get foundation icp', 'Read the ICP document');
+    },
+    brainGet as any
+  )
+  .command(
+    'brain:set <category> <key>',
+    'Replace a brain document (asks for approval)',
+    (yargs: Argv) => {
+      return yargs
+        .positional('category', {
+          describe: 'foundation, sources or channels',
+          type: 'string',
+        })
+        .positional('key', { describe: 'Document key', type: 'string' })
+        .option('file', {
+          describe: 'Path to a JSON file of rules',
+          type: 'string',
+        })
+        .option('rules', { describe: 'Inline JSON of rules', type: 'string' })
+        .example(
+          '$0 brain:set foundation icp --file icp.json',
+          'Replace the ICP document with the rules in icp.json'
+        );
+    },
+    brainSet as any
+  )
+  .command(
+    'brain:delete <category> <key>',
+    'Delete a brain document (asks for approval)',
+    (yargs: Argv) => {
+      return yargs
+        .positional('category', {
+          describe: 'Category of the document',
+          type: 'string',
+        })
+        .positional('key', { describe: 'Document key', type: 'string' })
+        .example('$0 brain:delete sources abc123', 'Delete a source document');
+    },
+    brainDelete as any
   )
   .command(
     'auth:login',
