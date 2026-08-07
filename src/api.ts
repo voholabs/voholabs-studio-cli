@@ -198,4 +198,48 @@ export class PostizAPI {
       body: JSON.stringify({ methodName, data }),
     });
   }
+
+  async getBrainSchema() {
+    return this.request('/public/v1/brain/schema', {
+      method: 'GET',
+    });
+  }
+
+  async getBrain() {
+    return this.request('/public/v1/brain', {
+      method: 'GET',
+    });
+  }
+
+  async getBrainDocument(category: string, key: string) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: 'GET',
+      }
+    );
+  }
+
+  async saveBrainDocument(
+    category: string,
+    key: string,
+    body: Record<string, unknown>
+  ) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }
+    );
+  }
+
+  async deleteBrainDocument(category: string, key: string) {
+    return this.request(
+      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
 }
