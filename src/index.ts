@@ -5,6 +5,7 @@ import { listIntegrations, listGroups, getIntegrationSettings, triggerIntegratio
 import { getAnalytics, getPostAnalytics } from './commands/analytics';
 import { uploadFile } from './commands/upload';
 import { authLogin, authLogout, authStatus } from './commands/auth';
+import { listMedia, deleteMedia, findSlot } from './commands/media';
 import {
   brainSchema,
   brainList,
@@ -446,6 +447,35 @@ yargs(hideBin(process.argv))
         .example('$0 brain:delete sources abc123', 'Delete a source document');
     },
     brainDelete as any
+  )
+  .command(
+    'media:list',
+    'List the media library',
+    (yargs: Argv) => {
+      return yargs
+        .option('page', { describe: 'Page number', type: 'number' })
+        .option('search', { describe: 'Filter by name', type: 'string' })
+        .example('$0 media:list --search logo', 'Find media named like "logo"');
+    },
+    listMedia as any
+  )
+  .command(
+    'media:delete <id>',
+    'Delete a file from the media library',
+    (yargs: Argv) => {
+      return yargs.positional('id', { describe: 'Media ID', type: 'string' });
+    },
+    deleteMedia as any
+  )
+  .command(
+    'slots:next <id>',
+    'Find the next free slot in a channel schedule',
+    (yargs: Argv) => {
+      return yargs
+        .positional('id', { describe: 'Integration ID', type: 'string' })
+        .example('$0 slots:next abc123', 'Next free time for that channel');
+    },
+    findSlot as any
   )
   .command(
     'auth:login',

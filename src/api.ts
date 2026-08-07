@@ -242,4 +242,26 @@ export class PostizAPI {
       }
     );
   }
+
+  async listMedia(page?: number, search?: string) {
+    const params = new URLSearchParams();
+    if (page) params.set('page', String(page));
+    if (search) params.set('search', search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/public/v1/media${query}`, {
+      method: 'GET',
+    });
+  }
+
+  async deleteMedia(id: string) {
+    return this.request(`/public/v1/media/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async findSlot(integrationId: string) {
+    return this.request(`/public/v1/find-slot/${encodeURIComponent(integrationId)}`, {
+      method: 'GET',
+    });
+  }
 }
