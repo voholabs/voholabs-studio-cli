@@ -3,17 +3,17 @@ import { readFileSync } from 'fs';
 import { PostizAPI } from '../api';
 import { getConfig } from '../config';
 
-interface BrainRule {
+interface BriefRule {
   heading: string;
   body: string;
 }
 
-interface BrainLink {
+interface BriefLink {
   url: string;
   note?: string;
 }
 
-interface BrainAsset {
+interface BriefAsset {
   name: string;
   url: string;
   mime?: string;
@@ -22,7 +22,7 @@ interface BrainAsset {
 
 const ruleId = () => Math.random().toString(36).slice(2, 12);
 
-// Changing the brain changes what gets published, so a person confirms it.
+// Changing the brief changes what gets published, so a person confirms it.
 // When nothing is attached to the terminal there is nobody to ask, and the
 // command refuses rather than assuming consent.
 async function confirmHuman(summary: string) {
@@ -31,7 +31,7 @@ async function confirmHuman(summary: string) {
   console.log('');
 
   if (!process.stdin.isTTY) {
-    console.error('❌ This changes the agent brain and needs a human to approve it.');
+    console.error('❌ This changes the agent brief and needs a human to approve it.');
     console.error('   Run it in a terminal; it will not auto-approve.');
     process.exit(1);
   }
@@ -50,43 +50,43 @@ async function confirmHuman(summary: string) {
   }
 }
 
-export async function brainSchema() {
+export async function briefSchema() {
   const api = new PostizAPI(getConfig());
 
   try {
-    const result = await api.getBrainSchema();
-    console.log('🧠 Brain structure:');
+    const result = await api.getBriefSchema();
+    console.log('🧠 Brief structure:');
     console.log(JSON.stringify(result, null, 2));
     return result;
   } catch (error: any) {
-    console.error('❌ Failed to read the brain schema:', error.message);
+    console.error('❌ Failed to read the brief schema:', error.message);
     process.exit(1);
   }
 }
 
-export async function brainList(args: any) {
+export async function briefList(args: any) {
   const api = new PostizAPI(getConfig());
 
   try {
-    const result = await api.getBrain();
+    const result = await api.getBrief();
     const documents = args?.category
       ? result.documents.filter((d: any) => d.category === args.category)
       : result.documents;
 
-    console.log('🧠 Agent brain:');
+    console.log('🧠 Agent brief:');
     console.log(JSON.stringify({ ...result, documents }, null, 2));
     return documents;
   } catch (error: any) {
-    console.error('❌ Failed to read the brain:', error.message);
+    console.error('❌ Failed to read the brief:', error.message);
     process.exit(1);
   }
 }
 
-export async function brainGet(args: any) {
+export async function briefGet(args: any) {
   const api = new PostizAPI(getConfig());
 
   try {
-    const result = await api.getBrainDocument(args.category, args.key);
+    const result = await api.getBriefDocument(args.category, args.key);
     console.log(JSON.stringify(result, null, 2));
     return result;
   } catch (error: any) {
@@ -95,7 +95,7 @@ export async function brainGet(args: any) {
   }
 }
 
-export async function brainSet(args: any) {
+export async function briefSet(args: any) {
   const api = new PostizAPI(getConfig());
 
   let payload: any;
@@ -111,7 +111,7 @@ export async function brainSet(args: any) {
     process.exit(1);
   }
 
-  const rules: BrainRule[] = Array.isArray(payload) ? payload : payload.rules || [];
+  const rules: BriefRule[] = Array.isArray(payload) ? payload : payload.rules || [];
   const body: Record<string, unknown> = {
     blocks: rules.map((rule) => ({
       id: ruleId(),
@@ -125,7 +125,7 @@ export async function brainSet(args: any) {
   }
 
   if (payload.links) {
-    body.links = (payload.links as BrainLink[]).map((link) => ({
+    body.links = (payload.links as BriefLink[]).map((link) => ({
       id: ruleId(),
       url: String(link.url || ''),
       note: String(link.note || ''),
@@ -135,7 +135,7 @@ export async function brainSet(args: any) {
   // Brand files: upload with `voholabs upload` first, then pass the path it
   // returns as the url here. Omitting assets leaves the stored ones alone.
   if (payload.assets) {
-    body.assets = (payload.assets as BrainAsset[]).map((asset) => ({
+    body.assets = (payload.assets as BriefAsset[]).map((asset) => ({
       id: ruleId(),
       name: String(asset.name || ''),
       url: String(asset.url || ''),
@@ -144,7 +144,7 @@ export async function brainSet(args: any) {
     }));
   }
 
-  const blocks = body.blocks as BrainRule[];
+  const blocks = body.blocks as BriefRule[];
   const preview = blocks
     .map((b) => `  • ${b.heading || '(no heading)'}\n    ${b.body.replace(/\n/g, '\n    ')}`)
     .join('\n');
@@ -166,7 +166,7 @@ export async function brainSet(args: any) {
   );
 
   try {
-    const result = await api.saveBrainDocument(args.category, args.key, body);
+    const result = await api.saveBriefDocument(args.category, args.key, body);
     console.log('✅ Saved');
     console.log(JSON.stringify(result, null, 2));
     return result;
@@ -176,12 +176,12 @@ export async function brainSet(args: any) {
   }
 }
 
-export async function brainDelete(args: any) {
+export async function briefDelete(args: any) {
   const api = new PostizAPI(getConfig());
 
   let existing: any;
   try {
-    existing = await api.getBrainDocument(args.category, args.key);
+    existing = await api.getBriefDocument(args.category, args.key);
   } catch (error: any) {
     console.error('❌ Could not find that document:', error.message);
     process.exit(1);
@@ -193,7 +193,7 @@ export async function brainDelete(args: any) {
   );
 
   try {
-    await api.deleteBrainDocument(args.category, args.key);
+    await api.deleteBriefDocument(args.category, args.key);
     console.log('✅ Deleted');
   } catch (error: any) {
     console.error('❌ Failed to delete:', error.message);
