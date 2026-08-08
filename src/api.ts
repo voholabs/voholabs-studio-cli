@@ -199,6 +199,23 @@ export class PostizAPI {
     });
   }
 
+  async getTeam() {
+    return this.request('/public/v1/team', {
+      method: 'GET',
+    });
+  }
+
+  async notifyTeam(body: {
+    subject: string;
+    message: string;
+    to?: string[];
+  }) {
+    return this.request('/public/v1/notify', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
   async getBriefSchema() {
     return this.request('/public/v1/brief/schema', {
       method: 'GET',
