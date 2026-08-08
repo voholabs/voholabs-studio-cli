@@ -199,34 +199,34 @@ export class PostizAPI {
     });
   }
 
-  async getBrainSchema() {
-    return this.request('/public/v1/brain/schema', {
+  async getBriefSchema() {
+    return this.request('/public/v1/brief/schema', {
       method: 'GET',
     });
   }
 
-  async getBrain() {
-    return this.request('/public/v1/brain', {
+  async getBrief() {
+    return this.request('/public/v1/brief', {
       method: 'GET',
     });
   }
 
-  async getBrainDocument(category: string, key: string) {
+  async getBriefDocument(category: string, key: string) {
     return this.request(
-      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      `/public/v1/brief/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
       {
         method: 'GET',
       }
     );
   }
 
-  async saveBrainDocument(
+  async saveBriefDocument(
     category: string,
     key: string,
     body: Record<string, unknown>
   ) {
     return this.request(
-      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      `/public/v1/brief/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
       {
         method: 'PATCH',
         body: JSON.stringify(body),
@@ -234,9 +234,9 @@ export class PostizAPI {
     );
   }
 
-  async deleteBrainDocument(category: string, key: string) {
+  async deleteBriefDocument(category: string, key: string) {
     return this.request(
-      `/public/v1/brain/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      `/public/v1/brief/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
       {
         method: 'DELETE',
       }

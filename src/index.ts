@@ -7,12 +7,12 @@ import { uploadFile } from './commands/upload';
 import { authLogin, authLogout, authStatus } from './commands/auth';
 import { listMedia, deleteMedia, findSlot } from './commands/media';
 import {
-  brainSchema,
-  brainList,
-  brainGet,
-  brainSet,
-  brainDelete,
-} from './commands/brain';
+  briefSchema,
+  briefList,
+  briefGet,
+  briefSet,
+  briefDelete,
+} from './commands/brief';
 import type { Argv } from 'yargs';
 
 yargs(hideBin(process.argv))
@@ -373,14 +373,14 @@ yargs(hideBin(process.argv))
     uploadFile as any
   )
   .command(
-    'brain:schema',
-    'Show which brain categories and documents exist',
+    'brief:schema',
+    'Show which brief categories and documents exist',
     {},
-    brainSchema as any
+    briefSchema as any
   )
   .command(
-    'brain:list',
-    'Read the agent brain',
+    'brief:list',
+    'Read the agent brief',
     (yargs: Argv) => {
       return yargs
         .option('category', {
@@ -388,15 +388,15 @@ yargs(hideBin(process.argv))
           type: 'string',
         })
         .example(
-          '$0 brain:list --category foundation',
+          '$0 brief:list --category foundation',
           'Read the Foundation documents'
         );
     },
-    brainList as any
+    briefList as any
   )
   .command(
-    'brain:get <category> <key>',
-    'Read one brain document',
+    'brief:get <category> <key>',
+    'Read one brief document',
     (yargs: Argv) => {
       return yargs
         .positional('category', {
@@ -404,13 +404,13 @@ yargs(hideBin(process.argv))
           type: 'string',
         })
         .positional('key', { describe: 'Document key', type: 'string' })
-        .example('$0 brain:get foundation icp', 'Read the ICP document');
+        .example('$0 brief:get foundation icp', 'Read the ICP document');
     },
-    brainGet as any
+    briefGet as any
   )
   .command(
-    'brain:set <category> <key>',
-    'Replace a brain document (asks for approval)',
+    'brief:set <category> <key>',
+    'Replace a brief document (asks for approval)',
     (yargs: Argv) => {
       return yargs
         .positional('category', {
@@ -424,19 +424,19 @@ yargs(hideBin(process.argv))
         })
         .option('rules', { describe: 'Inline JSON of rules', type: 'string' })
         .example(
-          '$0 brain:set foundation icp --file icp.json',
+          '$0 brief:set foundation icp --file icp.json',
           'Replace the ICP document with the rules in icp.json'
         )
         .example(
-          '$0 brain:set foundation branding-assets --file brand.json',
+          '$0 brief:set foundation branding-assets --file brand.json',
           'Rules plus files, where each file url comes from `voholabs upload`'
         );
     },
-    brainSet as any
+    briefSet as any
   )
   .command(
-    'brain:delete <category> <key>',
-    'Delete a brain document (asks for approval)',
+    'brief:delete <category> <key>',
+    'Delete a brief document (asks for approval)',
     (yargs: Argv) => {
       return yargs
         .positional('category', {
@@ -444,9 +444,9 @@ yargs(hideBin(process.argv))
           type: 'string',
         })
         .positional('key', { describe: 'Document key', type: 'string' })
-        .example('$0 brain:delete sources abc123', 'Delete a source document');
+        .example('$0 brief:delete sources abc123', 'Delete a source document');
     },
-    brainDelete as any
+    briefDelete as any
   )
   .command(
     'media:list',
