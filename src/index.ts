@@ -6,7 +6,8 @@ import { getAnalytics, getPostAnalytics } from './commands/analytics';
 import { uploadFile } from './commands/upload';
 import { authLogin, authLogout, authStatus } from './commands/auth';
 import { listMedia, deleteMedia, findSlot } from './commands/media';
-import { listTeam, notifyTeam } from './commands/team';
+// Needs /public/v1/team and /public/v1/notify, which Studio does not have yet.
+// import { listTeam, notifyTeam } from './commands/team';
 import {
   briefSchema,
   briefList,
@@ -386,41 +387,42 @@ yargs(hideBin(process.argv))
     },
     uploadFile as any
   )
-  .command('team:list', 'Show who is on this team', {}, listTeam as any)
-  .command(
-    'team:notify',
-    'Email the team (team members only — no outside addresses)',
-    (yargs: Argv) => {
-      return yargs
-        .option('subject', {
-          describe: 'Subject line',
-          type: 'string',
-          demandOption: true,
-        })
-        .option('message', {
-          describe: 'Body as plain text. Use --file for anything long.',
-          type: 'string',
-        })
-        .option('file', {
-          describe: 'Read the body from a file instead of --message',
-          type: 'string',
-        })
-        .option('to', {
-          describe:
-            'Comma separated team addresses. Omit for everyone. Non-members are dropped.',
-          type: 'string',
-        })
-        .example(
-          '$0 team:notify --subject "Launch is live" --message "All four posts went out."',
-          'Email everyone on the team'
-        )
-        .example(
-          '$0 team:notify --subject "Needs a look" --file ./note.txt --to sam@acme.com',
-          'Email one member with the body from a file'
-        );
-    },
-    notifyTeam as any
-  )
+  // team:list and team:notify need /public/v1/team and /public/v1/notify, which Studio does not have yet.
+  // .command('team:list', 'Show who is on this team', {}, listTeam as any)
+  // .command(
+  //   'team:notify',
+  //   'Email the team (team members only — no outside addresses)',
+  //   (yargs: Argv) => {
+  //     return yargs
+  //       .option('subject', {
+  //         describe: 'Subject line',
+  //         type: 'string',
+  //         demandOption: true,
+  //       })
+  //       .option('message', {
+  //         describe: 'Body as plain text. Use --file for anything long.',
+  //         type: 'string',
+  //       })
+  //       .option('file', {
+  //         describe: 'Read the body from a file instead of --message',
+  //         type: 'string',
+  //       })
+  //       .option('to', {
+  //         describe:
+  //           'Comma separated team addresses. Omit for everyone. Non-members are dropped.',
+  //         type: 'string',
+  //       })
+  //       .example(
+  //         '$0 team:notify --subject "Launch is live" --message "All four posts went out."',
+  //         'Email everyone on the team'
+  //       )
+  //       .example(
+  //         '$0 team:notify --subject "Needs a look" --file ./note.txt --to sam@acme.com',
+  //         'Email one member with the body from a file'
+  //       );
+  //   },
+  //   notifyTeam as any
+  // )
   .command(
     'brief:schema',
     'Show which brief categories and documents exist',
