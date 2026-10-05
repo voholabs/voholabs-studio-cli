@@ -6,14 +6,23 @@ import { getAnalytics, getPostAnalytics } from './commands/analytics';
 import { uploadFile } from './commands/upload';
 import { authLogin, authLogout, authStatus } from './commands/auth';
 import { listMedia, deleteMedia, findSlot } from './commands/media';
-import { listTeam, notifyTeam } from './commands/team';
+// Needs /public/v1/team and /public/v1/notify, which Studio does not have yet.
+// import { listTeam, notifyTeam } from './commands/team';
 import {
   briefSchema,
   briefList,
   briefGet,
   briefSet,
   briefDelete,
+  briefOnboarding,
 } from './commands/brief';
+import {
+  walletBalance,
+  walletPrices,
+  walletTransactions,
+  walletEstimate,
+} from './commands/wallet';
+import { skillsList, skillsGet } from './commands/skills';
 import type { Argv } from 'yargs';
 
 yargs(hideBin(process.argv))
@@ -330,7 +339,12 @@ yargs(hideBin(process.argv))
         .example(
           '$0 analytics:platform integration-123 -d 30',
           'Get last 30 days of analytics'
-        );
+        )
+        .option('fresh', {
+          describe:
+            'Skip the one-hour cache and read the network again (X reads are charged on pay-as-you-go)',
+          type: 'boolean',
+        });
     },
     getAnalytics as any
   )
@@ -373,41 +387,42 @@ yargs(hideBin(process.argv))
     },
     uploadFile as any
   )
-  .command('team:list', 'Show who is on this team', {}, listTeam as any)
-  .command(
-    'team:notify',
-    'Email the team (team members only — no outside addresses)',
-    (yargs: Argv) => {
-      return yargs
-        .option('subject', {
-          describe: 'Subject line',
-          type: 'string',
-          demandOption: true,
-        })
-        .option('message', {
-          describe: 'Body as plain text. Use --file for anything long.',
-          type: 'string',
-        })
-        .option('file', {
-          describe: 'Read the body from a file instead of --message',
-          type: 'string',
-        })
-        .option('to', {
-          describe:
-            'Comma separated team addresses. Omit for everyone. Non-members are dropped.',
-          type: 'string',
-        })
-        .example(
-          '$0 team:notify --subject "Launch is live" --message "All four posts went out."',
-          'Email everyone on the team'
-        )
-        .example(
-          '$0 team:notify --subject "Needs a look" --file ./note.txt --to sam@acme.com',
-          'Email one member with the body from a file'
-        );
-    },
-    notifyTeam as any
-  )
+  // team:list and team:notify need /public/v1/team and /public/v1/notify, which Studio does not have yet.
+  // .command('team:list', 'Show who is on this team', {}, listTeam as any)
+  // .command(
+  //   'team:notify',
+  //   'Email the team (team members only — no outside addresses)',
+  //   (yargs: Argv) => {
+  //     return yargs
+  //       .option('subject', {
+  //         describe: 'Subject line',
+  //         type: 'string',
+  //         demandOption: true,
+  //       })
+  //       .option('message', {
+  //         describe: 'Body as plain text. Use --file for anything long.',
+  //         type: 'string',
+  //       })
+  //       .option('file', {
+  //         describe: 'Read the body from a file instead of --message',
+  //         type: 'string',
+  //       })
+  //       .option('to', {
+  //         describe:
+  //           'Comma separated team addresses. Omit for everyone. Non-members are dropped.',
+  //         type: 'string',
+  //       })
+  //       .example(
+  //         '$0 team:notify --subject "Launch is live" --message "All four posts went out."',
+  //         'Email everyone on the team'
+  //       )
+  //       .example(
+  //         '$0 team:notify --subject "Needs a look" --file ./note.txt --to sam@acme.com',
+  //         'Email one member with the body from a file'
+  //       );
+  //   },
+  //   notifyTeam as any
+  // )
   .command(
     'brief:schema',
     'Show which brief categories and documents exist',
@@ -480,9 +495,90 @@ yargs(hideBin(process.argv))
           type: 'string',
         })
         .positional('key', { describe: 'Document key', type: 'string' })
+        .option('keep-history', {
+          describe: 'Keep the document history and record the removal in it',
+          type: 'boolean',
+        })
         .example('$0 brief:delete sources abc123', 'Delete a source document');
     },
     briefDelete as any
+  )
+  .command(
+    'brief:onboarding',
+    'Show the guided brief onboarding status and where to start it',
+    {},
+    briefOnboarding as any
+  )
+  .command(
+    'wallet:balance',
+    'Show the wallet credits, auto top-up and the scheduled usage forecast',
+    {},
+    walletBalance as any
+  )
+  .command(
+    'wallet:prices',
+    'Show what costs credits (channels not listed are free)',
+    (yargs: Argv) => {
+      return yargs
+        .option('provider', { describe: 'Only one provider, e.g. x', type: 'string' })
+        .example('$0 wallet:prices --provider x', 'What X posts and reads cost');
+    },
+    walletPrices as any
+  )
+  .command(
+    'wallet:transactions',
+    'List wallet top-ups, charges and refunds, newest first',
+    (yargs: Argv) => {
+      return yargs
+        .option('page', { describe: 'Page, from 0', type: 'number' })
+        .option('size', { describe: 'Items per page (1-100)', type: 'number' })
+        .option('type', {
+          describe: 'Comma separated: TOPUP, AUTO_TOPUP, SPEND, REFUND, GRANT, ADJUST',
+          type: 'string',
+        });
+    },
+    walletTransactions as any
+  )
+  .command(
+    'wallet:estimate',
+    'Price a post before scheduling it (nothing is charged)',
+    (yargs: Argv) => {
+      return yargs
+        .option('provider', {
+          describe: 'Provider identifier, e.g. x',
+          type: 'string',
+          demandOption: true,
+        })
+        .option('content', {
+          alias: 'c',
+          describe: 'The post, then each thread item (repeat -c)',
+          type: 'string',
+        })
+        .example(
+          '$0 wallet:estimate --provider x -c "First post" -c "Reply"',
+          'What a two-part X thread would take'
+        );
+    },
+    walletEstimate as any
+  )
+  .command(
+    'skills:list',
+    'List the skills library',
+    (yargs: Argv) => {
+      return yargs
+        .option('tag', { describe: 'Only skills with this tag key', type: 'string' })
+        .option('search', { describe: 'Words to look for', type: 'string' })
+        .example('$0 skills:list --tag writing', 'Writing skills');
+    },
+    skillsList as any
+  )
+  .command(
+    'skills:get <slug>',
+    'Read one skill in full',
+    (yargs: Argv) => {
+      return yargs.positional('slug', { describe: 'Skill slug', type: 'string' });
+    },
+    skillsGet as any
   )
   .command(
     'media:list',
@@ -547,6 +643,6 @@ yargs(hideBin(process.argv))
   .version()
   .alias('v', 'version')
   .epilogue(
-    'For more information, visit: https://studio.voholabs.com\n\nAuthentication:\n  OAuth2: voholabs auth:login\n  API Key: export VOHOLABS_API_KEY=your_api_key\n\n📽️  Recommendation: Use agent-media to generate AI videos & images (Kling, Veo, Sora, Seedance, Flux, Grok) and post them directly with Postiz.\n   Install: npm install -g agent-media-cli\n   Learn more: https://agent-media.ai'
+    'Docs: https://voholabs.com/docs/cli\n\nAuthentication:\n  OAuth2: voholabs auth:login\n  API Key: export VOHOLABS_API_KEY=your_api_key\n\n📽️  Recommendation: Use agent-media to generate AI videos & images (Kling, Veo, Sora, Seedance, Flux, Grok) and post them directly with Postiz.\n   Install: npm install -g agent-media-cli\n   Learn more: https://agent-media.ai'
   )
   .parse();

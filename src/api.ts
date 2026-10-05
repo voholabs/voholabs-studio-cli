@@ -30,13 +30,38 @@ export class PostizAPI {
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(`API Error (${response.status}): ${error}`);
+        throw new Error(this.errorMessage(response.status, error));
       }
 
       return await response.json();
     } catch (error: any) {
       throw new Error(`Request failed: ${error.message}`);
     }
+  }
+
+  // The Studio app the API belongs to (the API lives under /api).
+  private appUrl() {
+    return this.apiUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+
+  // A refusal that needs wallet credits (402 with wallet: true) reads as its
+  // message and the top-up link; anything else as before.
+  private errorMessage(status: number, text: string) {
+    if (status === 402) {
+      try {
+        const body = JSON.parse(text);
+        if (body?.wallet) {
+          const url =
+            typeof body.url === 'string' && body.url.startsWith('/')
+              ? `${this.appUrl()}${body.url}`
+              : body.url || `${this.appUrl()}/wallet`;
+          return `${body.message || body.msg || 'This needs wallet credits.'} Top up: ${url}`;
+        }
+      } catch (err) {
+        // Not JSON: fall through.
+      }
+    }
+    return `API Error (${status}): ${text}`;
   }
 
   async createPost(data: any) {
@@ -131,7 +156,7 @@ export class PostizAPI {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Upload failed (${response.status}): ${error}`);
+      throw new Error(`Upload failed: ${this.errorMessage(response.status, error)}`);
     }
 
     return await response.json();
@@ -157,8 +182,9 @@ export class PostizAPI {
     });
   }
 
-  async getAnalytics(integrationId: string, date: string) {
-    return this.request(`/public/v1/analytics/${integrationId}?date=${encodeURIComponent(date)}`, {
+  async getAnalytics(integrationId: string, date: string, fresh = false) {
+    const freshQuery = fresh ? '&fresh=true' : '';
+    return this.request(`/public/v1/analytics/${integrationId}?date=${encodeURIComponent(date)}${freshQuery}`, {
       method: 'GET',
     });
   }
@@ -251,13 +277,67 @@ export class PostizAPI {
     );
   }
 
-  async deleteBriefDocument(category: string, key: string) {
+  async deleteBriefDocument(category: string, key: string, keepHistory = false) {
+    const query = keepHistory ? '?keepHistory=true' : '';
     return this.request(
-      `/public/v1/brief/${encodeURIComponent(category)}/${encodeURIComponent(key)}`,
+      `/public/v1/brief/${encodeURIComponent(category)}/${encodeURIComponent(key)}${query}`,
       {
         method: 'DELETE',
       }
     );
+  }
+
+  async getBriefOnboarding() {
+    return this.request('/public/v1/brief/onboarding', {
+      method: 'GET',
+    });
+  }
+
+  async getWallet() {
+    return this.request('/public/v1/wallet', {
+      method: 'GET',
+    });
+  }
+
+  async getWalletPrices(provider?: string) {
+    const query = provider ? `?provider=${encodeURIComponent(provider)}` : '';
+    return this.request(`/public/v1/wallet/prices${query}`, {
+      method: 'GET',
+    });
+  }
+
+  async getWalletTransactions(page?: number, size?: number, type?: string) {
+    const params = new URLSearchParams();
+    if (page) params.set('page', String(page));
+    if (size) params.set('size', String(size));
+    if (type) params.set('type', type);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/public/v1/wallet/transactions${query}`, {
+      method: 'GET',
+    });
+  }
+
+  async estimateWallet(body: { provider: string; contents: string[] }) {
+    return this.request('/public/v1/wallet/estimate', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async listSkills(tag?: string, search?: string) {
+    const params = new URLSearchParams();
+    if (tag) params.set('tag', tag);
+    if (search) params.set('search', search);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/public/v1/skills${query}`, {
+      method: 'GET',
+    });
+  }
+
+  async getSkill(slug: string) {
+    return this.request(`/public/v1/skills/${encodeURIComponent(slug)}`, {
+      method: 'GET',
+    });
   }
 
   async listMedia(page?: number, search?: string) {

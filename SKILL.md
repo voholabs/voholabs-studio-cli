@@ -1,7 +1,7 @@
 ---
 name: postiz
 description: Postiz is a tool to schedule social media and chat posts to 28+ channels X, LinkedIn, LinkedIn Page, Reddit, Instagram, Facebook Page, Threads, YouTube, Google My Business, TikTok, Pinterest, Dribbble, Discord, Slack, Kick, Twitch, Mastodon, Bluesky, Lemmy, Farcaster, Telegram, Nostr, VK, Medium, Dev.to, Hashnode, WordPress, ListMonk
-homepage: https://docs.postiz.com/public-api/introduction
+homepage: https://voholabs.com/docs/cli
 metadata: {"openclaw":{"emoji":"🌎","requires":{"bins":[],"env":["VOHOLABS_API_URL"]}}}
 ---
 
