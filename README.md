@@ -8,7 +8,9 @@ npx skills add gitroomhq/postiz-agent
 
 **Social media automation CLI for AI agents** - Schedule posts across 28+ platforms programmatically.
 
-The Voholabs CLI provides a command-line interface to the Postiz API, enabling developers and AI agents to automate social media posting, manage content, and handle media uploads across platforms like Twitter/X, LinkedIn, Reddit, YouTube, TikTok, Instagram, Facebook, and more.
+**Docs:** https://voholabs.com/docs/cli (API reference: https://voholabs.com/docs/api)
+
+The Voholabs CLI provides a command-line interface to the Voholabs Studio API, enabling developers and AI agents to automate social media posting, manage content, and handle media uploads across platforms like Twitter/X, LinkedIn, Reddit, YouTube, TikTok, Instagram, Facebook, and more.
 
 ---
 
@@ -199,6 +201,26 @@ postiz posts:status <post-id> --status schedule
 Move a scheduled post back to a draft, or promote a draft into the publishing queue. Switching to `draft` also terminates any workflow that's already running for the post, so it won't publish. Switching to `schedule` queues the post for publishing at its stored date.
 
 ---
+
+### Wallet credits
+
+Pay-as-you-go workspaces pay some channels per post (X today) from wallet credits. A post on such a channel is paid when it is scheduled, not when it publishes; drafts are free. When the credits do not cover it, `posts:create` fails with the reason and the top-up link. Top-ups happen in Studio.
+
+```bash
+voholabs wallet:balance                         # credits, auto top-up, scheduled usage forecast
+voholabs wallet:prices [--provider x]           # what costs credits (channels not listed are free)
+voholabs wallet:transactions [--type SPEND]     # top-ups, charges and refunds, newest first
+voholabs wallet:estimate --provider x -c "Post" -c "Reply"   # price a post first, nothing is charged
+```
+
+### Skills and the brief
+
+```bash
+voholabs skills:list [--tag writing] [--search hooks]   # the skills library (opens with the first top-up)
+voholabs skills:get <slug>                              # one skill in full
+voholabs brief:onboarding                               # guided brief onboarding status and its start link
+voholabs brief:delete <category> <key> --keep-history   # delete but keep the document history
+```
 
 ### Analytics
 
@@ -577,7 +599,7 @@ The CLI interacts with these Postiz API endpoints:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `VOHOLABS_API_KEY` | No* | - | Your Postiz API key |
-| `VOHOLABS_API_URL` | No | `https://api.postiz.com` | Custom API endpoint |
+| `VOHOLABS_API_URL` | No | `https://studio.voholabs.com/api` | Custom API endpoint |
 | `POSTIZ_AUTH_SERVER` | No | `https://cli-auth.postiz.com` | Custom auth server URL |
 
 *Either OAuth2 (via `voholabs auth:login`) or `VOHOLABS_API_KEY` is required.
@@ -718,8 +740,9 @@ AGPL-3.0
 
 ## Links
 
-- **Website:** [postiz.com](https://postiz.com)
-- **API Docs:** [docs.postiz.com](https://docs.postiz.com)
+- **Website:** [voholabs.com](https://voholabs.com)
+- **CLI Docs:** [voholabs.com/docs/cli](https://voholabs.com/docs/cli)
+- **API Docs:** [voholabs.com/docs/api](https://voholabs.com/docs/api) (OpenAPI: `https://studio.voholabs.com/api/public/v1/openapi.json`)
 - **GitHub:** [gitroomhq/postiz-app](https://github.com/gitroomhq/postiz-app)
 - **Issues:** [Report bugs](https://github.com/gitroomhq/postiz-app/issues)
 

@@ -13,7 +13,7 @@ export async function getAnalytics(args: any) {
   const date = args.date || '7';
 
   try {
-    const result = await api.getAnalytics(args.id, date);
+    const result = await api.getAnalytics(args.id, date, !!args.fresh);
     console.log(`📊 Analytics for integration: ${args.id}`);
     console.log(JSON.stringify(result, null, 2));
     return result;

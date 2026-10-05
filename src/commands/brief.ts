@@ -193,10 +193,31 @@ export async function briefDelete(args: any) {
   );
 
   try {
-    await api.deleteBriefDocument(args.category, args.key);
+    await api.deleteBriefDocument(
+      args.category,
+      args.key,
+      !!args.keepHistory
+    );
     console.log('✅ Deleted');
   } catch (error: any) {
     console.error('❌ Failed to delete:', error.message);
+    process.exit(1);
+  }
+}
+
+export async function briefOnboarding() {
+  const api = new PostizAPI(getConfig());
+
+  try {
+    const result: any = await api.getBriefOnboarding();
+    console.log('🧭 Brief onboarding:');
+    console.log(JSON.stringify(result, null, 2));
+    if (result?.startUrl) {
+      console.log(`\nStart or reopen it in Studio: ${result.startUrl}`);
+    }
+    return result;
+  } catch (error: any) {
+    console.error('❌ Failed to read the onboarding status:', error.message);
     process.exit(1);
   }
 }
